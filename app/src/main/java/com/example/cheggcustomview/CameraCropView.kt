@@ -7,7 +7,6 @@ import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
-import androidx.annotation.StringRes
 
 class CameraCropView(
     context: Context,
@@ -27,13 +26,13 @@ class CameraCropView(
     private val cornerBitmapEndBottom: Bitmap =
         getBitmapAttr("endBottomIcon", R.drawable.corner_end_bottom)
 
-    private var cropWidth = getCropDimension("initialWidthCrop")
-    private var cropHeight = getCropDimension("initialHeightCrop")
+    private var cropWidth = getCropDimension("initialWidthCrop", 200f)
+    private var cropHeight = getCropDimension("initialHeightCrop", 200f)
 
-    private val minWidth = getCropDimension("minWidthCrop")
-    private val minHeight = getCropDimension("minHeightCrop")
+    private val minWidth = getCropDimension("minWidthCrop", 200f)
+    private val minHeight = getCropDimension("minHeightCrop", 200f)
 
-    private val cropMarginTop = getCropDimension("cropMarginTop")
+    private var cropMarginTop = getCropDimension("cropMarginTop", 200f)
 
     private val cornerPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val cropPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -54,97 +53,73 @@ class CameraCropView(
             //Camera rect:
             drawRect(
                 (right - cropWidth.toFloat()) / 2,
-                (bottom - cropHeight.toFloat()) / 2,
+                cropMarginTop.toFloat(),
                 cropWidth + (right - cropWidth.toFloat()) / 2,
-                cropHeight + (bottom - cropHeight.toFloat()) / 2,
+                cropHeight + cropMarginTop.toFloat(),
                 cropPaint
             )
             //4 corner bitmaps:
             drawBitmap(
                 cornerBitmapStartTop,
                 (right - cropWidth.toFloat()) / 2 - cornerBitmapStartTop.width / 7,
-                (bottom - cropHeight.toFloat()) / 2 - cornerBitmapStartTop.height / 7,
+                cropMarginTop.toFloat() - cornerBitmapStartTop.height / 7,
                 cornerPaint
             )
             drawBitmap(
                 cornerBitmapEndTop,
                 cropWidth + (right - cropWidth.toFloat()) / 2 - cornerBitmapEndTop.width / 8f * 7,
-                (bottom - cropHeight.toFloat()) / 2 - cornerBitmapEndTop.height / 7,
+                cropMarginTop.toFloat() - cornerBitmapEndTop.height / 7,
                 cornerPaint
             )
             drawBitmap(
                 cornerBitmapStartBottom,
                 (right - cropWidth.toFloat()) / 2 - cornerBitmapStartBottom.width / 7,
-                cropHeight + (bottom - cropHeight.toFloat()) / 2 - cornerBitmapStartBottom.height / 8f * 7,
+                cropHeight + cropMarginTop - cornerBitmapStartBottom.height / 8f * 7,
                 cornerPaint
             )
             drawBitmap(
                 cornerBitmapEndBottom,
                 cropWidth + (right - cropWidth.toFloat()) / 2 - cornerBitmapEndBottom.width / 8f * 7,
-                cropHeight + (bottom - cropHeight.toFloat()) / 2 - cornerBitmapEndBottom.height / 8f * 7,
+                cropHeight + cropMarginTop - cornerBitmapEndBottom.height / 8f * 7,
                 cornerPaint
             )
 
         }
     }
 
-    private var growth = 0
+    private var resizing = 0f
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         return detector.onTouchEvent(event).let { result ->
             if (!result) {
                 when (event?.action) {
                     MotionEvent.ACTION_MOVE -> {
-                        //Check of lastX and lastY is for prevent growth immediately after the touch - but only after touch and move.
+                        //Check of lastX and lastY is for prevent resizing immediately after the touch - but only after touch and move.
                         //For this lastX and lastY are reset immediately after each start of touch - and receive values after moving started.
                         if (lastX != 0F && lastY != 0F) {
-                            //Check in which quarter of the screen the user started the movement. Each quarter perform growth in its direction.
-                            if (startTouchPointX >= halfScreenWidth && startTouchPointY >= halfScreenHeight) {
-                                //Width growth:
-                                growth = (event.x - lastX).toInt()
-                                //Check if the growth going to over the min/max size: yes - set to the size the min/max size. no - do the growth.
-                                if (cropWidth + growth < minWidth) cropWidth = minWidth
-                                if (cropWidth + growth > right) cropWidth = right
-                                else cropWidth += growth
+                            //Check in which half of the screen the user started the movement. Each half perform resizing in its direction.
 
-                                //Height growth:
-                                growth = (event.y - lastY).toInt()
-                                if (cropHeight + growth < minHeight) cropHeight = minHeight
-                                if (cropHeight + growth > bottom) cropHeight = bottom
-                                else cropHeight += growth
+                            //Width resizing:
+                            resizing = 2 *
+                                if (startTouchPointX >= halfScreenWidth) event.x - lastX
+                                else lastX - event.x
 
-                            } else if (startTouchPointX < halfScreenWidth && startTouchPointY < halfScreenHeight) {
-                                growth = (event.x - lastX).toInt()
-                                if (cropWidth - growth < minWidth) cropWidth = minWidth
-                                if (cropWidth - growth > right) cropWidth = right
-                                else cropWidth -= growth
+                            //Check if the resizing going to over the min/max size: yes - set to the size the min/max size. no - do the resizing.
+                            if (cropWidth + resizing < minWidth) cropWidth = minWidth
+                            else if (cropWidth + resizing < right) cropWidth += resizing
 
-                                growth = (event.y - lastY).toInt()
-                                if (cropHeight - growth < minHeight) cropHeight = minHeight
-                                if (cropHeight - growth > bottom) cropHeight = bottom
-                                else cropHeight -= growth
 
-                            } else if (startTouchPointX < halfScreenWidth && startTouchPointY >= halfScreenHeight) {
-                                growth = (event.x - lastX).toInt()
-                                if (cropWidth - growth < minWidth) cropWidth = minWidth
-                                if (cropWidth - growth > right) cropWidth = right
-                                else cropWidth -= growth
+                            //Height resizing:
+                            resizing = 2 *
+                                if (startTouchPointY >= cropMarginTop + cropHeight / 2) event.y - lastY
+                                else lastY - event.y
 
-                                growth = (event.y - lastY).toInt()
-                                if (cropHeight + growth < minHeight) cropHeight = minHeight
-                                if (cropHeight + growth > bottom) cropHeight = bottom
-                                else cropHeight += growth
-
-                            } else {
-                                growth = (event.x - lastX).toInt()
-                                if (cropWidth + growth < minWidth) cropWidth = minWidth
-                                if (cropWidth + growth > right) cropWidth = right
-                                else cropWidth += growth
-
-                                growth = (event.y - lastY).toInt()
-                                if (cropHeight - growth < minHeight) cropHeight = minHeight
-                                if (cropHeight - growth > bottom) cropHeight = bottom
-                                else cropHeight -= growth
+                            if (cropHeight + resizing < minHeight) {
+                                cropMarginTop += (cropHeight - minHeight) / 2
+                                cropHeight = minHeight
+                            } else if (cropMarginTop - resizing / 2 > 0  && resizing / 2 + cropMarginTop + cropHeight < bottom) {
+                                cropHeight += resizing
+                                cropMarginTop -= resizing / 2
                             }
                             invalidate()
                         }
@@ -172,9 +147,9 @@ class CameraCropView(
 
     private val detector: GestureDetector = GestureDetector(context, touchListener)
 
-    private fun getCropDimension(attr: String): Int {
+    private fun getCropDimension(attr: String, defValue: Float): Float {
         val userInput = attrs.getAttributeValue("http://schemas.android.com/apk/res-auto", attr)
-        return (userInput?.substring(0, userInput.indexOf("."))?.toInt() ?: 200).dp()
+        return (userInput?.substring(0, userInput.indexOf("."))?.toFloat() ?: defValue).dp()
     }
 
     private fun getBitmapAttr(attr: String, defBitmap: Int): Bitmap {
@@ -191,5 +166,5 @@ class CameraCropView(
         }
     }
 
-    private fun Int.dp() = (this * resources.displayMetrics.density).toInt()
+    private fun Float.dp() = (this * resources.displayMetrics.density)
 }

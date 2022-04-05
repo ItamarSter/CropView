@@ -11,20 +11,20 @@
         android:id="@+id/cropView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@color/black"
         android:alpha="0.4"
+        android:background="@color/black"
+        app:cropMarginTop="300dp"
         app:endBottomIcon="@drawable/corner_end_bottom"
-        app:startTopIcon="@drawable/corner_start_top"
-        app:startBottomIcon="@drawable/corner_start_bottom"
         app:endTopIcon="@drawable/corner_end_top"
+        app:initialHeightCrop="170dp"
+        app:initialWidthCrop="280dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:minHeightCrop="80dp"
         app:minWidthCrop="80dp"
-        app:initialWidthCrop="280dp"
-        app:initialHeightCrop="170dp"
-        app:cropMarginTop="100dp"/>
+        app:startBottomIcon="@drawable/corner_start_bottom"
+        app:startTopIcon="@drawable/corner_start_top" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
