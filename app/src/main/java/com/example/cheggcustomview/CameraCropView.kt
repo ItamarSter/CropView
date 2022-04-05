@@ -110,40 +110,17 @@ class CameraCropView(
 
 
                             //Height resizing:
-                            resizing = (event.y - lastY)
-                            if (startTouchPointY >= cropMarginTop + cropHeight / 2) {
-                                when {
-                                    //Reaching the min:
-                                    cropHeight + resizing < minHeight -> {
-                                        cropMarginTop += (cropHeight - minHeight) / 2
-                                        cropHeight = minHeight
-                                    }
-                                    //Reaching the top of screen:
-                                    cropMarginTop - resizing / 2 < 0 -> {
-//                                        cropHeight += cropMarginTop * 2
-//                                        cropMarginTop = 0f
-                                    }
-                                    //Usual resizing:
-                                    else -> {
-                                        cropHeight += resizing
-                                        cropMarginTop -= resizing / 2
-                                    }
-                                }
-                            } else {
-                                when {
-                                    cropHeight - resizing < minHeight -> {
-                                        cropMarginTop += (cropHeight - minHeight) / 2
-                                        cropHeight = minHeight
-                                    }
-                                    cropMarginTop + resizing / 2 < 0 -> {
-//                                        cropHeight += cropMarginTop * 2
-//                                        cropMarginTop = 0f
-                                    }
-                                    else -> {
-                                        cropHeight -= resizing
-                                        cropMarginTop += resizing / 2
-                                    }
-                                }
+                            resizing =
+                                if (startTouchPointY >= cropMarginTop + cropHeight / 2) event.y - lastY
+                                else lastY - event.y
+
+                            //Reaching the min:
+                            if (cropHeight + resizing < minHeight) {
+                                cropMarginTop += (cropHeight - minHeight) / 2
+                                cropHeight = minHeight
+                            } else if (cropMarginTop - resizing / 2 > 0) {
+                                cropHeight += resizing
+                                cropMarginTop -= resizing / 2
                             }
                             invalidate()
                         }
