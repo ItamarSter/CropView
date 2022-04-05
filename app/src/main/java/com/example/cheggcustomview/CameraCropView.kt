@@ -52,34 +52,34 @@ class CameraCropView(
         canvas?.apply {
             //Camera rect:
             drawRect(
-                (right - cropWidth.toFloat()) / 2,
-                cropMarginTop.toFloat(),
-                cropWidth + (right - cropWidth.toFloat()) / 2,
-                cropHeight + cropMarginTop.toFloat(),
+                (right - cropWidth) / 2,
+                cropMarginTop,
+                cropWidth + (right - cropWidth) / 2,
+                cropHeight + cropMarginTop,
                 cropPaint
             )
             //4 corner bitmaps:
             drawBitmap(
                 cornerBitmapStartTop,
-                (right - cropWidth.toFloat()) / 2 - cornerBitmapStartTop.width / 7,
-                cropMarginTop.toFloat() - cornerBitmapStartTop.height / 7,
+                (right - cropWidth) / 2 - cornerBitmapStartTop.width / 7,
+                cropMarginTop - cornerBitmapStartTop.height / 7,
                 cornerPaint
             )
             drawBitmap(
                 cornerBitmapEndTop,
-                cropWidth + (right - cropWidth.toFloat()) / 2 - cornerBitmapEndTop.width / 8f * 7,
-                cropMarginTop.toFloat() - cornerBitmapEndTop.height / 7,
+                cropWidth + (right - cropWidth) / 2 - cornerBitmapEndTop.width / 8f * 7,
+                cropMarginTop - cornerBitmapEndTop.height / 7,
                 cornerPaint
             )
             drawBitmap(
                 cornerBitmapStartBottom,
-                (right - cropWidth.toFloat()) / 2 - cornerBitmapStartBottom.width / 7,
+                (right - cropWidth) / 2 - cornerBitmapStartBottom.width / 7,
                 cropHeight + cropMarginTop - cornerBitmapStartBottom.height / 8f * 7,
                 cornerPaint
             )
             drawBitmap(
                 cornerBitmapEndBottom,
-                cropWidth + (right - cropWidth.toFloat()) / 2 - cornerBitmapEndBottom.width / 8f * 7,
+                cropWidth + (right - cropWidth) / 2 - cornerBitmapEndBottom.width / 8f * 7,
                 cropHeight + cropMarginTop - cornerBitmapEndBottom.height / 8f * 7,
                 cornerPaint
             )
