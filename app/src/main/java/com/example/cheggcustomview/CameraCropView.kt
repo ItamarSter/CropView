@@ -15,8 +15,10 @@ class CameraCropView(
     context,
     attrs
 ) {
-    private val halfScreenWidth = Resources.getSystem().displayMetrics.widthPixels / 2
-    private val halfScreenHeight = Resources.getSystem().displayMetrics.heightPixels / 2
+    var cropInCenterVertically = false
+
+    private val halfLayoutWidth get() = width / 2
+    private val halfLayoutHeight get() = height / 2
 
     private val cornerBitmapStartTop: Bitmap =
         getBitmapAttr("startTopIcon", R.drawable.corner_start_top)
@@ -32,7 +34,7 @@ class CameraCropView(
     private val minWidth = getCropDimension("minWidthCrop", 200f)
     private val minHeight = getCropDimension("minHeightCrop", 200f)
 
-    private var cropMarginTop = getCropDimension("cropMarginTop", 200f)
+    private var cropMarginTop = getCropMarginTop()
 
     private val cornerPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val cropPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -46,41 +48,45 @@ class CameraCropView(
     var lastX: Float = 0F
     var lastY: Float = 0F
 
+    init {
+        if (cropMarginTop == -1f) cropInCenterVertically = true
+    }
+
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 
         canvas?.apply {
             //Camera rect:
             drawRect(
-                (right - cropWidth) / 2,
-                cropMarginTop,
-                cropWidth + (right - cropWidth) / 2,
-                cropHeight + cropMarginTop,
+                (width - cropWidth) / 2,
+                if(cropInCenterVertically) (height - cropHeight) / 2 else cropMarginTop,
+                cropWidth + (width - cropWidth) / 2,
+                if (cropInCenterVertically) (height - cropHeight) / 2 + cropHeight else cropHeight + cropMarginTop,
                 cropPaint
             )
             //4 corner bitmaps:
             drawBitmap(
                 cornerBitmapStartTop,
-                (right - cropWidth) / 2 - cornerBitmapStartTop.width / 7,
-                cropMarginTop - cornerBitmapStartTop.height / 7,
+                (width - cropWidth) / 2 - cornerBitmapStartTop.width / 7,
+                (if (cropInCenterVertically) (height - cropHeight) / 2 else cropMarginTop) - cornerBitmapStartTop.height / 7,
                 cornerPaint
             )
             drawBitmap(
                 cornerBitmapEndTop,
-                cropWidth + (right - cropWidth) / 2 - cornerBitmapEndTop.width / 8f * 7,
-                cropMarginTop - cornerBitmapEndTop.height / 7,
+                cropWidth + (width - cropWidth) / 2 - cornerBitmapEndTop.width / 8f * 7,
+                (if (cropInCenterVertically) (height - cropHeight) / 2 else cropMarginTop) - cornerBitmapEndTop.height / 7,
                 cornerPaint
             )
             drawBitmap(
                 cornerBitmapStartBottom,
-                (right - cropWidth) / 2 - cornerBitmapStartBottom.width / 7,
-                cropHeight + cropMarginTop - cornerBitmapStartBottom.height / 8f * 7,
+                (width - cropWidth) / 2 - cornerBitmapStartBottom.width / 7,
+                (if (cropInCenterVertically) (height - cropHeight) / 2 + cropHeight else cropHeight + cropMarginTop) - cornerBitmapStartBottom.height / 8f * 7,
                 cornerPaint
             )
             drawBitmap(
                 cornerBitmapEndBottom,
-                cropWidth + (right - cropWidth) / 2 - cornerBitmapEndBottom.width / 8f * 7,
-                cropHeight + cropMarginTop - cornerBitmapEndBottom.height / 8f * 7,
+                cropWidth + (width - cropWidth) / 2 - cornerBitmapEndBottom.width / 8f * 7,
+                (if (cropInCenterVertically) (height - cropHeight) / 2 + cropHeight else cropHeight + cropMarginTop) - cornerBitmapEndBottom.height / 8f * 7,
                 cornerPaint
             )
 
@@ -101,23 +107,29 @@ class CameraCropView(
 
                             //Width resizing:
                             resizing = 2 *
-                                if (startTouchPointX >= halfScreenWidth) event.x - lastX
+                                if (startTouchPointX >= halfLayoutWidth) event.x - lastX
                                 else lastX - event.x
 
                             //Check if the resizing going to over the min/max size: yes - set to the size the min/max size. no - do the resizing.
                             if (cropWidth + resizing < minWidth) cropWidth = minWidth
-                            else if (cropWidth + resizing < right) cropWidth += resizing
+                            else if (cropWidth + resizing < width) cropWidth += resizing
 
 
                             //Height resizing:
                             resizing = 2 *
-                                if (startTouchPointY >= cropMarginTop + cropHeight / 2) event.y - lastY
-                                else lastY - event.y
+                                    if (cropInCenterVertically){
+                                        if (startTouchPointY >= halfLayoutHeight) event.y - lastY
+                                        else lastY - event.y
+                                    } else {
+                                        if (startTouchPointY >= cropMarginTop + cropHeight / 2) event.y - lastY
+                                        else lastY - event.y
+                                    }
+
 
                             if (cropHeight + resizing < minHeight) {
                                 cropMarginTop += (cropHeight - minHeight) / 2
                                 cropHeight = minHeight
-                            } else if (cropMarginTop - resizing / 2 > 0  && resizing / 2 + cropMarginTop + cropHeight < bottom) {
+                            } else if ((!cropInCenterVertically) && (cropMarginTop - resizing / 2 > 0  && resizing / 2 + cropMarginTop + cropHeight < height) || ((cropInCenterVertically && cropHeight + resizing < height)) ) {
                                 cropHeight += resizing
                                 cropMarginTop -= resizing / 2
                             }
@@ -150,6 +162,12 @@ class CameraCropView(
     private fun getCropDimension(attr: String, defValue: Float): Float {
         val userInput = attrs.getAttributeValue("http://schemas.android.com/apk/res-auto", attr)
         return (userInput?.substring(0, userInput.indexOf("."))?.toFloat() ?: defValue).dp()
+    }
+
+    private fun getCropMarginTop(): Float {
+        val userInput = attrs.getAttributeValue("http://schemas.android.com/apk/res-auto", "cropMarginTop")
+            ?: return -1f
+        return (userInput.substring(0, userInput.indexOf(".")).toFloat()).dp()
     }
 
     private fun getBitmapAttr(attr: String, defBitmap: Int): Bitmap {
