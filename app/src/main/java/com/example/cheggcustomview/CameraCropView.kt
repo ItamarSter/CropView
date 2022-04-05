@@ -100,7 +100,7 @@ class CameraCropView(
                             //Check in which half of the screen the user started the movement. Each half perform resizing in its direction.
 
                             //Width resizing:
-                            resizing =
+                            resizing = 2 *
                                 if (startTouchPointX >= halfScreenWidth) event.x - lastX
                                 else lastX - event.x
 
@@ -110,15 +110,14 @@ class CameraCropView(
 
 
                             //Height resizing:
-                            resizing =
+                            resizing = 2 *
                                 if (startTouchPointY >= cropMarginTop + cropHeight / 2) event.y - lastY
                                 else lastY - event.y
 
-                            //Reaching the min:
                             if (cropHeight + resizing < minHeight) {
                                 cropMarginTop += (cropHeight - minHeight) / 2
                                 cropHeight = minHeight
-                            } else if (cropMarginTop - resizing / 2 > 0) {
+                            } else if (cropMarginTop - resizing / 2 > 0  && resizing / 2 + cropMarginTop + cropHeight < bottom) {
                                 cropHeight += resizing
                                 cropMarginTop -= resizing / 2
                             }

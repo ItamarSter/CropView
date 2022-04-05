@@ -13,7 +13,7 @@
         android:layout_height="0dp"
         android:alpha="0.4"
         android:background="@color/black"
-        app:cropMarginTop="100dp"
+        app:cropMarginTop="300dp"
         app:endBottomIcon="@drawable/corner_end_bottom"
         app:endTopIcon="@drawable/corner_end_top"
         app:initialHeightCrop="170dp"
